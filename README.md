@@ -1,33 +1,128 @@
-# portfoliowebsite
+# Data Explorer
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+A Next.js application for exploring, visualizing, and analyzing datasets connected to Supabase.
 
-## Built with v0
+## Features
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+- 📊 Interactive data visualization with charts and graphs
+- 🔍 Data table exploration with sorting and filtering
+- 📈 Real-time statistics and summary metrics
+- 🗄️ Direct integration with Supabase database
+- 🎨 Beautiful UI built with Tailwind CSS and shadcn components
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_n98XykQpLE8uAwCddDGfDKUOG5i3)
+## Tech Stack
+
+- **Frontend**: Next.js 16, React 19, TypeScript
+- **Database**: Supabase (PostgreSQL)
+- **Visualization**: Recharts
+- **Styling**: Tailwind CSS, shadcn components
+- **Icons**: Lucide React
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+- Node.js 18+
+- npm or yarn
+- Supabase account
+
+### Setup
+
+1. **Clone and install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Configure Supabase:**
+   - Create a new project at [supabase.com](https://supabase.com)
+   - Set up your database schema and import your dataset
+   - Copy your project URL and anon key
+
+3. **Add environment variables:**
+   ```bash
+   cp .env.local.example .env.local
+   ```
+   
+   Edit `.env.local` and add your Supabase credentials:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   ```
+
+4. **Update your table name:**
+   - Open `app/page.tsx`
+   - Replace `'your_table_name'` with your actual Supabase table name
+
+5. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Project Structure
+
+```
+├── app/
+│   ├── page.tsx                 # Main data explorer page
+│   └── api/
+│       └── data/
+│           └── route.ts         # Data fetching API endpoint
+├── components/
+│   └── DataExplorer.tsx         # Data exploration component
+├── lib/
+│   └── supabase.ts             # Supabase client configuration
+├── .env.local.example           # Environment variables template
+└── package.json
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Customization
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Add More Visualizations
+
+Edit `components/DataExplorer.tsx` to add additional chart types:
+
+```typescript
+import {
+  LineChart,
+  PieChart,
+  ScatterChart,
+} from 'recharts'
+```
+
+### Query Specific Data
+
+Modify the API route in `app/api/data/route.ts` to add filtering:
+
+```typescript
+const { data, error } = await supabase
+  .from(table)
+  .select('*')
+  .eq('column_name', 'value')
+  .limit(parseInt(limit))
+```
+
+### Connect Multiple Tables
+
+Duplicate the `DataExplorer` component and pass different table names to visualize multiple datasets.
+
+## Deployment
+
+Deploy to Vercel with a single click:
+
+```bash
+npm run build
+```
+
+Make sure to add your environment variables in your hosting platform's settings.
 
 ## Learn More
 
-To learn more, take a look at the following resources:
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Supabase Documentation](https://supabase.com/docs)
+- [Recharts Documentation](https://recharts.org)
+- [Tailwind CSS](https://tailwindcss.com)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+## License
+
+MIT
