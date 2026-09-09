@@ -16,13 +16,13 @@ The dataset does not contain direct measures of AI adoption, displacement, or to
 Requires Node.js 22+ and pnpm 9.12.3 (the version in packageManager).
 
 1. Run `npx --yes pnpm@9.12.3 install`.
-2. Copy `.env.local.example` to `.env.local` and set the anon/publishable key.
+2. The public dataset connection works without environment variables. To override it, copy `.env.local.example` to `.env.local` and set the URL and anon/publishable key.
 3. Run `npm run dev` and visit the local URL.
 
 The Supabase URL is `https://agjtywogdnmpvajyyfkl.supabase.co`.
 The exact table name is `public."AI Impact on Jobs & Salaries (2020-2026)"`.
 
-Only a public read key is used. Never use a secret or service-role key. The browser reads directly through Supabase's REST API, respecting the table's grants and row-level policies. Public read access must be enabled only for data intended to be public. Local environment files are ignored; previously tracked local configuration has been removed from the index. Existing Git history is not rewritten.
+Only a public read key is used. The dataset URL and anon key are intentionally included in `lib/public-supabase-config.ts`, so GitHub-connected builds work without host-specific setup. These public values are visible to website visitors; access is controlled by Supabase grants and row-level policies. Never use a secret or service-role key. Public read access must be enabled only for data intended to be public. Local environment files remain ignored. Existing Git history is not rewritten.
 
 ## Data behavior
 
@@ -39,7 +39,7 @@ A page load fetches fresh records. Multiple paginated requests are not a transac
 - `npm run build`: production static export in `out/`.
 - `npm start`: local production preview after building.
 
-Next.js remains the framework. The obsolete generic API route and portfolio sections were removed; the explorer needs no server secrets or server runtime. The production output can be hosted on Sites, Vercel, or a static host. Public environment values are embedded at build time: set them in the hosting build environment and rebuild after changing them. The Sites manifest identifies the separate private review site; the original GitHub remote is retained.
+Next.js remains the framework. The obsolete generic API route and portfolio sections were removed; the explorer needs no server secrets or server runtime. The production output can be hosted on Sites, Vercel, or a static host. Public environment overrides are embedded at build time; rebuild after changing them. Without overrides, the app uses the committed public dataset configuration. The Sites manifest identifies the separate private review site; the original GitHub remote is retained.
 
 ## Main files
 

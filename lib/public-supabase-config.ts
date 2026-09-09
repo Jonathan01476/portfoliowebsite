@@ -1,0 +1,3 @@
+// Public browser configuration for this public dataset. Access is controlled by Supabase RLS.
+export const PUBLIC_SUPABASE_URL = "https://agjtywogdnmpvajyyfkl.supabase.co"
+export const PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnanR5d29nZG5tcHZhanl5ZmtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NTk4NzEsImV4cCI6MjEwNDUzNTg3MX0.h7cMSERpC_keq1MNDpBh3G_jjJvFCKkf17wkM6MjLj4"

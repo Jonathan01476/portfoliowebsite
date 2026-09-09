@@ -10,7 +10,8 @@ function loadTs(file, dependencies = {}) {
   return module.exports
 }
 const data = loadTs('lib/dataset.ts')
-const { loadDataset } = loadTs('lib/load-dataset.ts', { './dataset': data })
+const publicConfig = loadTs('lib/public-supabase-config.ts')
+const { loadDataset } = loadTs('lib/load-dataset.ts', { './dataset': data, './public-supabase-config': publicConfig })
 const rows = [
   { id: 1, work_year: 2020, salary_in_usd: 100, role_family: 'Data', experience_level: 'EN', work_mode: null, remote_ratio: 100, employee_residence: 'US', salary_outlier_flag: false },
   { id: 2, work_year: 2020, salary_in_usd: 300, role_family: 'Data', experience_level: 'SE', work_mode: 'Hybrid', employee_residence: 'US', salary_outlier_flag: true },
@@ -68,4 +69,28 @@ test('loader distinguishes denied access from an empty table', async () => {
     global.fetch = async () => new Response('{}', { status: 403 })
     await assert.rejects(loadDataset(new AbortController().signal, () => {}), /public reading/)
   } finally { global.fetch = originalFetch }
+})
+test('a deployment without environment variables uses the public dataset configuration', async () => {
+  const originalFetch = global.fetch
+  const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const originalKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  delete process.env.NEXT_PUBLIC_SUPABASE_URL
+  delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  let requested = false
+  global.fetch = async (url, options) => {
+    requested = true
+    assert.equal(new URL(url).origin, publicConfig.PUBLIC_SUPABASE_URL)
+    assert.equal(options.headers.apikey, publicConfig.PUBLIC_SUPABASE_ANON_KEY)
+    return new Response('[]', { headers: { 'content-range': '*/0' } })
+  }
+  try {
+    await loadDataset(new AbortController().signal, () => {})
+    assert.equal(requested, true)
+  } finally {
+    global.fetch = originalFetch
+    if (originalUrl === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL
+    else process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl
+    if (originalKey === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    else process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = originalKey
+  }
 })

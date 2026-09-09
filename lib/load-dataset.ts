@@ -1,8 +1,9 @@
 import { MAX_RECORDS, SalaryRow, TABLE_NAME } from './dataset'
+import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from './public-supabase-config'
 
 export async function loadDataset(signal: AbortSignal, onProgress: (loaded: number, total: number | null) => void) {
-  const base = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL || PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || PUBLIC_SUPABASE_ANON_KEY
   if (!base || !key) throw new Error('The dataset connection has not been configured. Please contact the site owner.')
   if (key.startsWith('sb_secret_')) throw new Error('The dataset requires a public read key. An elevated key cannot be used in the browser.')
   const rows: SalaryRow[] = []
