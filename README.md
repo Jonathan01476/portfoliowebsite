@@ -1,128 +1,51 @@
-# Data Explorer
+﻿# Work / Shift — Salary Explorer
 
-A Next.js application for exploring, visualizing, and analyzing datasets connected to Supabase.
+A complete replacement of the portfolio with a Supabase-backed explorer for **AI Impact on Jobs & Salaries (2020–2026)**.
 
-## Features
+## Explore
 
-- 📊 Interactive data visualization with charts and graphs
-- 🔍 Data table exploration with sorting and filtering
-- 📈 Real-time statistics and summary metrics
-- 🗄️ Direct integration with Supabase database
-- 🎨 Beautiful UI built with Tailwind CSS and shadcn components
+- Overview: median USD salaries by year, role family, experience, and work mode, with sample sizes.
+- Shared filters: year, role family, experience, work mode, employee country, and flagged-outlier exclusion.
+- Data: searchable, sortable records with pagination and CSV export of the current results.
+- About the data: field definitions, calculation rules, and limitations.
 
-## Tech Stack
+The dataset does not contain direct measures of AI adoption, displacement, or total employment. The site does not attribute salary patterns to AI. Source provenance and the status of 2026 values remain unverified.
 
-- **Frontend**: Next.js 16, React 19, TypeScript
-- **Database**: Supabase (PostgreSQL)
-- **Visualization**: Recharts
-- **Styling**: Tailwind CSS, shadcn components
-- **Icons**: Lucide React
+## Local setup
 
-## Getting Started
+Requires Node.js 22+ and pnpm 9.12.3 (the version in packageManager).
 
-### Prerequisites
+1. Run `npx --yes pnpm@9.12.3 install`.
+2. Copy `.env.local.example` to `.env.local` and set the anon/publishable key.
+3. Run `npm run dev` and visit the local URL.
 
-- Node.js 18+
-- npm or yarn
-- Supabase account
+The Supabase URL is `https://agjtywogdnmpvajyyfkl.supabase.co`.
+The exact table name is `public."AI Impact on Jobs & Salaries (2020-2026)"`.
 
-### Setup
+Only a public read key is used. Never use a secret or service-role key. The browser reads directly through Supabase's REST API, respecting the table's grants and row-level policies. Public read access must be enabled only for data intended to be public. Local environment files are ignored; previously tracked local configuration has been removed from the index. Existing Git history is not rewritten.
 
-1. **Clone and install dependencies:**
-   ```bash
-   npm install
-   ```
+## Data behavior
 
-2. **Configure Supabase:**
-   - Create a new project at [supabase.com](https://supabase.com)
-   - Set up your database schema and import your dataset
-   - Copy your project URL and anon key
+The loader pages by ascending ID, follows the API's exact count, and reads up to 100,000 records. If the limit is reached, a prominent notice identifies the results as a limited, non-random extract. There is no fabricated fallback data. Loading, failed access, empty data, and empty filter results each have their own state.
 
-3. **Add environment variables:**
-   ```bash
-   cp .env.local.example .env.local
-   ```
-   
-   Edit `.env.local` and add your Supabase credentials:
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=your_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-   ```
+Only years 2020–2026 are included; omitted-year counts are disclosed. Salary metrics use positive, finite USD values. Records without valid salaries remain inspectable. Outliers are included by default. Unknown flags remain included when flagged rows are excluded. Medians are unweighted, nominal USD; no inflation adjustment is applied.
 
-4. **Update your table name:**
-   - Open `app/page.tsx`
-   - Replace `'your_table_name'` with your actual Supabase table name
+A page load fetches fresh records. Multiple paginated requests are not a transactional snapshot, so results can change if the source is edited during loading. Search is specific to the Data view; shared filters affect both views. Data-view CSV export includes all search results, not just the visible page. Overview export includes all filtered records. Text cells are escaped to prevent spreadsheet formula execution.
 
-5. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
+## Validate and build
 
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+- `npm test`: arithmetic, filtering, CSV, and pagination/access regression checks.
+- `npm run typecheck`: TypeScript.
+- `npm run build`: production static export in `out/`.
+- `npm start`: local production preview after building.
 
-## Project Structure
+Next.js remains the framework. The obsolete generic API route and portfolio sections were removed; the explorer needs no server secrets or server runtime. The production output can be hosted on Sites, Vercel, or a static host. Public environment values are embedded at build time: set them in the hosting build environment and rebuild after changing them. The Sites manifest identifies the separate private review site; the original GitHub remote is retained.
 
-```
-├── app/
-│   ├── page.tsx                 # Main data explorer page
-│   └── api/
-│       └── data/
-│           └── route.ts         # Data fetching API endpoint
-├── components/
-│   └── DataExplorer.tsx         # Data exploration component
-├── lib/
-│   └── supabase.ts             # Supabase client configuration
-├── .env.local.example           # Environment variables template
-└── package.json
-```
+## Main files
 
-## Customization
+- `components/DataExplorer.tsx`: interface and interaction state.
+- `lib/dataset.ts`: typed rows, filters, aggregation, and CSV.
+- `lib/load-dataset.ts`: paginated Supabase reads.
+- `app/globals.css`: responsive theme.
+- `tests/dataset.test.cjs`: data regression checks.
 
-### Add More Visualizations
-
-Edit `components/DataExplorer.tsx` to add additional chart types:
-
-```typescript
-import {
-  LineChart,
-  PieChart,
-  ScatterChart,
-} from 'recharts'
-```
-
-### Query Specific Data
-
-Modify the API route in `app/api/data/route.ts` to add filtering:
-
-```typescript
-const { data, error } = await supabase
-  .from(table)
-  .select('*')
-  .eq('column_name', 'value')
-  .limit(parseInt(limit))
-```
-
-### Connect Multiple Tables
-
-Duplicate the `DataExplorer` component and pass different table names to visualize multiple datasets.
-
-## Deployment
-
-Deploy to Vercel with a single click:
-
-```bash
-npm run build
-```
-
-Make sure to add your environment variables in your hosting platform's settings.
-
-## Learn More
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Supabase Documentation](https://supabase.com/docs)
-- [Recharts Documentation](https://recharts.org)
-- [Tailwind CSS](https://tailwindcss.com)
-
-## License
-
-MIT

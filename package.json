@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "node scripts/serve.cjs",
+    "test": "node --test tests/*.test.cjs",
+    "typecheck": "tsc --noEmit"
   },
   "packageManager": "pnpm@9.12.3",
   "dependencies": {
