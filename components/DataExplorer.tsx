@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts'
 import { ArrowDownToLine, ArrowUpDown, BarChart3, BriefcaseBusiness, ChevronLeft, ChevronRight, Database, Globe2, Info, RefreshCw, Search, SlidersHorizontal, TrendingUp } from 'lucide-react'
-import { countryName, DEFAULT_FILTERS, experience, filterRows, Filters, groupSalaries, MAX_RECORDS, median, money, number, SalaryRow, textValue, toCsv, validSalary, workMode, yearlySalaries } from '@/lib/dataset'
+import { countryName, correlation, DEFAULT_FILTERS, experience, filterRows, Filters, groupSalaries, MAX_RECORDS, median, money, number, regression, SalaryRow, textValue, toCsv, validSalary, workMode, yearlySalaries } from '@/lib/dataset'
 import { loadDataset } from '@/lib/load-dataset'
 
 type View = 'overview' | 'data' | 'methods'
@@ -17,6 +17,30 @@ function Ranking({ groups }: { groups: ReturnType<typeof groupSalaries> }) {
     <div className="rank-track"><div className="rank-fill" style={{ width: (group.median / max * 100) + '%', background: index === 0 ? '#2254e8' : '#7997ed' }} /></div>
     <span className="rank-count">n = {number(group.count)}</span>
   </div>) : <p className="muted">No valid salaries in this selection.</p>}</div>
+}
+
+function USSignal({ rows }: { rows: SalaryRow[] }) {
+  const usRows = rows.filter(row => row.employee_residence === 'US' && validSalary(row))
+  const usMedian = median(usRows.map(row => row.salary_in_usd!))
+  const allMedian = median(rows.filter(validSalary).map(row => row.salary_in_usd!))
+  const share = rows.length ? usRows.length / rows.filter(row => textValue(row.employee_residence) !== 'Unknown').length * 100 : 0
+  const bars = [28, 46, 34, 65, 53, 78, 62, 88]
+  return <section className="us-signal panel">
+    <div className="us-copy"><p className="eyebrow">US SIGNAL / LIVE SAMPLE</p><h2>North American pulse</h2><p>United States records act as a readable reference point inside the global sample. The radar animates with the live selection.</p><div className="us-stats"><div><strong>{number(usRows.length)}</strong><span>US salary records</span></div><div><strong>{money(usMedian)}</strong><span>US median</span></div><div><strong>{share ? share.toFixed(1) + '%' : '—'}</strong><span>of known residences</span></div></div></div>
+    <div className="us-radar" aria-label="Animated United States sample signal"><div className="radar-grid" /><div className="radar-ring ring-one" /><div className="radar-ring ring-two" /><div className="radar-sweep" /><span className="radar-label">US</span><div className="signal-bars">{bars.map((height, i) => <i key={i} style={{ height: height + '%' }} />)}</div><span className="radar-caption">{allMedian && usMedian ? (usMedian >= allMedian ? 'above' : 'below') + ' global median' : 'awaiting signal'}</span></div>
+  </section>
+}
+
+function Relationship({ rows }: { rows: SalaryRow[] }) {
+  const points = rows.filter(validSalary).filter(row => typeof row.remote_ratio === 'number').map(row => ({ x: row.remote_ratio!, y: row.salary_in_usd! }))
+  const result = regression(rows, row => row.remote_ratio, row => validSalary(row) ? row.salary_in_usd : null)
+  const r = correlation(rows, row => row.remote_ratio, row => validSalary(row) ? row.salary_in_usd : null)
+  const line = result ? [{ x: 0, y: result.intercept }, { x: 100, y: result.intercept + result.slope * 100 }] : []
+  const barData = groupSalaries(rows, workMode).slice(0, 4)
+  return <section className="relationship-grid">
+    <article className="panel relationship-panel"><div className="panel-heading"><div><p className="eyebrow">RELATIONSHIP / REMOTE RATIO</p><h2>Does flexibility track with pay?</h2><p>Each point is a salary record. The line is a descriptive fit, not a causal claim.</p></div><span className="tag">{r === null ? 'NO SIGNAL' : 'r = ' + r.toFixed(2)}</span></div><div className="chart compact-chart"><ResponsiveContainer width="100%" height="100%"><ScatterChart margin={{ top: 10, right: 15, bottom: 6, left: 0 }}><CartesianGrid stroke="#26334f" strokeDasharray="3 4" /><XAxis type="number" dataKey="x" domain={[0, 100]} tickFormatter={value => value + '%'} tick={{ fill: '#8494b4', fontSize: 11 }} axisLine={false} tickLine={false} /><YAxis type="number" dataKey="y" tickFormatter={value => '$' + number(value / 1000) + 'k'} tick={{ fill: '#8494b4', fontSize: 11 }} axisLine={false} tickLine={false} width={56} /><Tooltip cursor={{ stroke: '#6376a8' }} formatter={(value, name) => [name === 'y' ? money(Number(value)) : value + '%', name === 'y' ? 'Salary' : 'Remote ratio']} /><Scatter data={points} fill="#43d9ff" fillOpacity={0.33} line={false} /><Scatter data={line} fill="none" line={{ stroke: '#ffb454', strokeWidth: 2, strokeDasharray: '5 5' }} isAnimationActive={false} /></ScatterChart></ResponsiveContainer></div><div className="relationship-foot"><strong>{result ? 'R² ' + result.r2.toFixed(2) : 'R² —'}</strong><span>{result ? 'explains ' + Math.round(result.r2 * 100) + '% of salary variation in this fit · n = ' + number(result.count) : 'Add valid salary and remote ratio values to calculate.'}</span></div></article>
+    <article className="panel"><div className="panel-heading"><div><p className="eyebrow">COMPARISON / WORK MODE</p><h2>Median by arrangement</h2><p>A compact bar chart keeps the mix visible.</p></div></div><div className="chart compact-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={barData} layout="vertical" margin={{ left: 4, right: 16 }}><CartesianGrid horizontal={false} stroke="#26334f" /><XAxis type="number" hide /><YAxis type="category" dataKey="name" width={75} tick={{ fill: '#aab8d0', fontSize: 11 }} axisLine={false} tickLine={false} /><Tooltip formatter={(value) => [money(Number(value)), 'Median salary']} /><Bar dataKey="median" fill="#8b7bff" radius={[0, 4, 4, 0]} barSize={18} /></BarChart></ResponsiveContainer></div></article>
+  </section>
 }
 
 function Methods() {
@@ -164,6 +188,7 @@ export default function DataExplorer() {
               <div className="metric"><div className="metric-label">Job titles <BriefcaseBusiness size={18} /></div><div className="metric-value">{number(summary.roles)}</div><div className="metric-note">Distinct non-missing titles</div></div>
               <div className="metric"><div className="metric-label">Countries represented <Globe2 size={18} /></div><div className="metric-value">{number(summary.countries)}</div><div className="metric-note">By employee residence</div></div>
             </section>
+            <USSignal rows={filtered} />
             <div className="chart-grid">
               <section className="panel"><div className="panel-heading"><div><h2>The salary trajectory</h2><p>Median salary by year</p></div><span className="tag">NOMINAL USD</span></div>
                 <div className="chart" role="img" aria-label={'Median USD salary by year. ' + summary.yearly.map(point => point.year + ': ' + money(point.median) + ', ' + point.count + ' records').join('. ')}>
@@ -172,6 +197,7 @@ export default function DataExplorer() {
               </section>
               <section className="panel"><div className="panel-heading"><div><h2>Where salaries stand</h2><p>Top six role families by median salary</p></div><span className="tag">USD</span></div><Ranking groups={summary.families} /><p className="chart-note">Sample sizes count valid salaries. Small groups deserve extra caution.</p></section>
             </div>
+            <Relationship rows={filtered} />
             <aside className="insight"><Info size={20} /><div><h2>{change !== null ? 'A pattern worth exploring' : 'Read the comparison in context'}</h2><p>{change !== null ? 'The median in this selection is ' + Math.abs(change).toFixed(1) + '% ' + (change >= 0 ? 'higher' : 'lower') + ' in ' + last.year + ' than in ' + first.year + '. ' : 'Select multiple years to compare salary medians over time. '}These are differences between observed groups, not a measure of AI’s causal impact.</p></div></aside>
             <div className="secondary-grid">
               <section className="panel"><div className="panel-heading"><div><h2>Experience &amp; compensation</h2><p>Median salary for each experience group</p></div></div><Ranking groups={summary.experience} /></section>

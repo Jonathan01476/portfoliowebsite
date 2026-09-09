@@ -54,6 +54,26 @@ export function yearlySalaries(rows: SalaryRow[]) {
     return { year, median: group?.median ?? null, count: group?.count ?? 0 }
   })
 }
+export function correlation(rows: SalaryRow[], x: (row: SalaryRow) => number | null, y: (row: SalaryRow) => number | null) {
+  const pairs = rows.map(row => [x(row), y(row)] as const).filter((pair): pair is [number, number] => pair.every(value => typeof value === 'number' && Number.isFinite(value)))
+  if (pairs.length < 2) return null
+  const meanX = pairs.reduce((sum, pair) => sum + pair[0], 0) / pairs.length
+  const meanY = pairs.reduce((sum, pair) => sum + pair[1], 0) / pairs.length
+  const numerator = pairs.reduce((sum, pair) => sum + (pair[0] - meanX) * (pair[1] - meanY), 0)
+  const denominator = Math.sqrt(pairs.reduce((sum, pair) => sum + (pair[0] - meanX) ** 2, 0) * pairs.reduce((sum, pair) => sum + (pair[1] - meanY) ** 2, 0))
+  return denominator ? numerator / denominator : 0
+}
+export function regression(rows: SalaryRow[], x: (row: SalaryRow) => number | null, y: (row: SalaryRow) => number | null) {
+  const pairs = rows.map(row => [x(row), y(row)] as const).filter((pair): pair is [number, number] => pair.every(value => typeof value === 'number' && Number.isFinite(value)))
+  if (pairs.length < 2) return null
+  const meanX = pairs.reduce((sum, pair) => sum + pair[0], 0) / pairs.length
+  const meanY = pairs.reduce((sum, pair) => sum + pair[1], 0) / pairs.length
+  const variance = pairs.reduce((sum, pair) => sum + (pair[0] - meanX) ** 2, 0)
+  const slope = variance ? pairs.reduce((sum, pair) => sum + (pair[0] - meanX) * (pair[1] - meanY), 0) / variance : 0
+  const intercept = meanY - slope * meanX
+  const r = correlation(rows, x, y) ?? 0
+  return { slope, intercept, r2: r * r, count: pairs.length }
+}
 export const money = (value: number | null) => value === null ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
 export const number = (value: number) => new Intl.NumberFormat('en-US').format(value)
 export function countryName(code: string) {
