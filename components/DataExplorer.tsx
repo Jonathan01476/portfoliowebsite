@@ -19,18 +19,6 @@ function Ranking({ groups }: { groups: ReturnType<typeof groupSalaries> }) {
   </div>) : <p className="muted">No valid salaries in this selection.</p>}</div>
 }
 
-function USSignal({ rows }: { rows: SalaryRow[] }) {
-  const usRows = rows.filter(row => row.employee_residence === 'US' && validSalary(row))
-  const usMedian = median(usRows.map(row => row.salary_in_usd!))
-  const allMedian = median(rows.filter(validSalary).map(row => row.salary_in_usd!))
-  const share = rows.length ? usRows.length / rows.filter(row => textValue(row.employee_residence) !== 'Unknown').length * 100 : 0
-  const bars = [28, 46, 34, 65, 53, 78, 62, 88]
-  return <section className="us-signal panel">
-    <div className="us-copy"><p className="eyebrow">US SIGNAL / LIVE SAMPLE</p><h2>North American pulse</h2><p>United States records act as a readable reference point inside the global sample. The radar animates with the live selection.</p><div className="us-stats"><div><strong>{number(usRows.length)}</strong><span>US salary records</span></div><div><strong>{money(usMedian)}</strong><span>US median</span></div><div><strong>{share ? share.toFixed(1) + '%' : '—'}</strong><span>of known residences</span></div></div></div>
-    <div className="us-radar" aria-label="Animated United States sample signal"><div className="radar-grid" /><div className="radar-ring ring-one" /><div className="radar-ring ring-two" /><div className="radar-sweep" /><span className="radar-label">US</span><div className="signal-bars">{bars.map((height, i) => <i key={i} style={{ height: height + '%' }} />)}</div><span className="radar-caption">{allMedian && usMedian ? (usMedian >= allMedian ? 'above' : 'below') + ' global median' : 'awaiting signal'}</span></div>
-  </section>
-}
-
 function Relationship({ rows }: { rows: SalaryRow[] }) {
   const points = rows.filter(validSalary).filter(row => typeof row.remote_ratio === 'number').map(row => ({ x: row.remote_ratio!, y: row.salary_in_usd! }))
   const result = regression(rows, row => row.remote_ratio, row => validSalary(row) ? row.salary_in_usd : null)
@@ -188,7 +176,6 @@ export default function DataExplorer() {
               <div className="metric"><div className="metric-label">Job titles <BriefcaseBusiness size={18} /></div><div className="metric-value">{number(summary.roles)}</div><div className="metric-note">Distinct non-missing titles</div></div>
               <div className="metric"><div className="metric-label">Countries represented <Globe2 size={18} /></div><div className="metric-value">{number(summary.countries)}</div><div className="metric-note">By employee residence</div></div>
             </section>
-            <USSignal rows={filtered} />
             <div className="chart-grid">
               <section className="panel"><div className="panel-heading"><div><h2>The salary trajectory</h2><p>Median salary by year</p></div><span className="tag">NOMINAL USD</span></div>
                 <div className="chart" role="img" aria-label={'Median USD salary by year. ' + summary.yearly.map(point => point.year + ': ' + money(point.median) + ', ' + point.count + ' records').join('. ')}>
