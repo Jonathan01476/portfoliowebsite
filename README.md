@@ -1,6 +1,6 @@
 ﻿# Work / Shift — Salary Explorer
 
-A complete replacement of the portfolio with a Supabase-backed explorer for **AI Impact on Jobs & Salaries (2020–2026)**.
+A Supabase-backed explorer for **AI Impact on Jobs & Salaries (2020–2026)**.
 
 ## Explore
 
